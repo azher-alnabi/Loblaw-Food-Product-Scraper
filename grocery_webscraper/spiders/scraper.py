@@ -1,12 +1,19 @@
 import scrapy
 from scrapy_playwright.page import PageMethod
+import json
+from scrapy.crawler import CrawlerProcess
+from scrapy.utils.project import get_project_settings
 
 
-class StorespiderSpider(scrapy.Spider):
+class StoreSpider(scrapy.Spider):
     name = "food"
     allowed_domains = ["zehrs.ca"]
     start_page_number = 1
-    end_page_number = 2
+
+    with open('initalization.json', 'r') as file:
+        end_page = json.load(file)
+
+    end_page_number = int(end_page[0]['end_page_number'])
 
 
     def start_requests(self):
@@ -48,3 +55,8 @@ class StorespiderSpider(scrapy.Spider):
                         "former-price": food.css('span[data-testid="was-price"]::text').get(),
                     },
                 }
+
+
+process = CrawlerProcess (settings = get_project_settings())
+process.crawl(StoreSpider)
+process.start()
