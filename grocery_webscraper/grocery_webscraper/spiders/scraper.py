@@ -57,6 +57,6 @@ class StoreSpider(scrapy.Spider):
                 }
 
 
-process = CrawlerProcess (settings = get_project_settings())
+process = CrawlerProcess(settings = get_project_settings())
 process.crawl(StoreSpider)
 process.start()

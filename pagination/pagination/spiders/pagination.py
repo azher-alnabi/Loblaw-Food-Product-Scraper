@@ -28,6 +28,6 @@ class PaginationSpider(scrapy.Spider):
             "end_page_number": end_page_number
         }
 
-process = CrawlerProcess (settings = get_project_settings())
+process = CrawlerProcess(settings = get_project_settings())
 process.crawl(PaginationSpider)
 process.start()
