@@ -55,12 +55,12 @@ def fetch_response(max_pages, method, url, headers, payload, domain):
                 f"Request for page {pagination_number} returned status {response.status_code}."
             )
 
-        response_serialization(response.text, pagination_number, output_folder)
+        response_serialization(response.text, pagination_number, output_folder, domain)
         print(f"{domain}_raw_product_data_{pagination_number} created.")
         time.sleep(random.normalvariate(1, 0.05))
 
 
-def response_serialization(raw_response, pagination_number, output_folder):
+def response_serialization(raw_response, pagination_number, output_folder, domain):
     response_data = msgspec.json.decode(raw_response.encode("utf-8"))
     encoded_json = msgspec.json.encode(response_data)
     formatted_json = msgspec.json.format(encoded_json, indent=4)
