@@ -2,8 +2,7 @@ from playwright.sync_api import sync_playwright
 import re
 
 
-"""
-Capture, convert, and reformat web requests into cURL and Python requests.
+"""Capture, convert, and reformat web requests into cURL and Python requests.
 
 This module captures network requests from Loblaws-affiliated websites (such as Loblaws, 
 No Frills, and Zehrs), converts them into cURL commands, and then translates these commands 
