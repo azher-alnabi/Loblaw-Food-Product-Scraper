@@ -34,6 +34,7 @@ def fetch_response(max_pages, method, url, headers, payload):
         )
 
         response_serialization(response.text, pagination_number, output_folder)
+        print(f"raw_product_data_{pagination_number} created.")
         time.sleep(random.normalvariate(1, 0.05))
 
 
