@@ -52,4 +52,4 @@ def response_serialization(raw_response, pagination_number, output_folder):
 if __name__ == "__main__":
     # Example usage
     curl_command = fetch_request("loblaws")
-    fetch_response(max_pages=1, **curl_to_requests(curl_command))
+    fetch_response(max_pages=209, **curl_to_requests(curl_command))
