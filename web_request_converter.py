@@ -1,5 +1,6 @@
 from playwright.sync_api import sync_playwright
 import re
+import logging
 
 
 """Capture, convert, and reformat web requests into cURL and Python requests.
@@ -9,16 +10,57 @@ No Frills, and Zehrs), converts them into cURL commands, and then translates the
 into Python `requests` format for further processing.
 
 Functions:
-- `request_to_curl`: Converts a captured Playwright request to a cURL command.
-- `fetch_request`: Navigates to a specified Loblaws domain URL, captures a network request, and 
-  returns it as a cURL command.
-- `curl_to_requests`: Parses a cURL command into Python `requests` format, extracting method, 
-  URL, headers, and payload.
+    - `fetch_request`: Navigates to a given Loblaws domain URL, captures a specific network request, 
+      and returns the request as a cURL command.
+    - `request_to_curl`: Converts a Playwright-captured request into a formatted cURL command.
+    - `curl_to_requests`: Parses a cURL command into a Python `requests` dictionary with method, URL, 
+      headers, and payload details for direct use in Python scripts.
 
 Example usage:
     curl_command = fetch_request("loblaws")
-    request_details = curl_to_requests(curl_command)
+    request_details = curl_to_requests(curl_command, domain)
 """
+
+
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
+
+
+def fetch_request(domain):
+    url = f"https://www.{domain}.ca/food/c/27985"
+
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        page = browser.new_page()
+
+        with page.expect_response(
+            "https://api.pcexpress.ca/pcx-bff/api/v2/listingPage/27985"
+        ) as response_info:
+            page.goto(url)
+
+        captured_response = response_info.value
+        response_status = captured_response.status
+
+        if response_status == 200:
+            logging.info(
+                f"Request to {captured_response.url} succeeded with status 200."
+            )
+        elif response_status == 403:
+            logging.warning(
+                f"Request to {captured_response.url} returned forbidden status 403."
+            )
+        else:
+            logging.info(
+                f"Request to {captured_response.url} failed with status {response_status}."
+            )
+
+        captured_request = captured_response.request
+        curl_command = request_to_curl(captured_request)
+
+        browser.close()
+
+    return curl_command, domain
 
 
 def request_to_curl(request):
@@ -33,27 +75,7 @@ def request_to_curl(request):
     return curl_command
 
 
-def fetch_request(domain):
-    url = f"https://www.{domain}.ca/food/c/27985"
-
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        page = browser.new_page()
-
-        with page.expect_request(
-            "https://api.pcexpress.ca/pcx-bff/api/v2/listingPage/27985"
-        ) as first:
-            page.goto(url)
-
-        captured_request = first.value
-        curl_command = request_to_curl(captured_request)
-
-        browser.close()
-
-    return curl_command
-
-
-def curl_to_requests(curl_command):
+def curl_to_requests(curl_command, domain):
     method_match = re.search(r"-X (\w+)", curl_command)
     method = method_match.group(1) if method_match else "GET"
 
@@ -68,10 +90,16 @@ def curl_to_requests(curl_command):
     data_match = re.search(r"--data-raw '([^']*)'", curl_command)
     payload = data_match.group(1) if data_match else None
 
-    return {"method": method, "url": url, "headers": headers, "payload": payload}
+    return {
+        "method": method,
+        "url": url,
+        "headers": headers,
+        "payload": payload,
+        "domain": domain,
+    }
 
 
 if __name__ == "__main__":
     # Example usage
-    curl_command = fetch_request("loblaws")
-    curl_to_requests(curl_command)
+    curl_command, domain = fetch_request("loblaws")
+    request_details = curl_to_requests(curl_command, domain)
