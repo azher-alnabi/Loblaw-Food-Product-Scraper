@@ -20,7 +20,7 @@ Functions:
 
 Example usage:
     curl_command, domain = fetch_request("loblaws")
-    fetch_response(max_pages=5, **curl_to_requests(curl_command))
+    fetch_response(max_pages=5, **curl_to_requests(curl_command, domain))
 """
 
 
