@@ -1,7 +1,0 @@
-scrapy-playwright==0.0.41
-playwright==1.47.0
-scrapy==2.11.2
-black==24.10.0
-playwright-stealth==1.0.6
-rebrowser-playwright==1.47.0
-requests==2.32.3
