@@ -34,7 +34,7 @@ def fetch_response(max_pages, method, url, headers, payload):
         )
 
         response_serialization(response.text, pagination_number, output_folder)
-        time.sleep(random.random(0.75, 1.25))
+        time.sleep(random.normalvariate(1, 0.05))
 
 
 def response_serialization(raw_response, pagination_number, output_folder):
