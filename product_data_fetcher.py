@@ -30,7 +30,7 @@ logging.basicConfig(
 
 
 def fetch_response(max_pages, method, url, headers, payload, domain):
-    output_folder = f"{domain}_raw_product_data"
+    output_folder = os.path.join("raw_product_data", f"{domain}_raw_product_data")
     os.makedirs(output_folder, exist_ok=True)
 
     for pagination_number in range(1, max_pages + 1):
