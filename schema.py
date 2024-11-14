@@ -1,6 +1,38 @@
 import json
-from typing import Optional
-from sqlmodel import Field, SQLModel, create_engine, Session, Relationship, select
+import logging
+from typing import Optional, List
+from sqlmodel import Field, SQLModel, create_engine, Session, Relationship
+
+
+"""This is the schema for the database that will store the product information.
+
+This schema uses SQLModel to define the structure of the database tables. The tables involved
+are "ProductInfo" and "ProductPrice".
+
+- ProductInfo:
+    Stores the general information about a product. This general information includes the
+    following: product ID, small image URL, brand name, title name, and type. 
+- ProductPrice:
+    Stores the pricing information for a product at a specific store. The tables are related such 
+    that a "ProductInfo" can have multiple "ProductPrices" associated with it.
+
+Functions:
+    - `upsert_product`: Inserts or updates a product in the database based on the product ID.
+    - `update_products_from_json`: Updates the database with product information from a JSON file.
+
+Example usage:
+    update_products_from_json("combined_product_data.json")
+"""
+
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.FileHandler("logs/database_operations.log"),
+        logging.StreamHandler(),
+    ],
+)
 
 
 class ProductInfo(SQLModel, table=True):
@@ -9,109 +41,156 @@ class ProductInfo(SQLModel, table=True):
     brand_name: Optional[str] = None
     title_name: str
     type: str
-    package_sizing: str
-    prices: list["ProductPrice"] = Relationship(back_populates="product")
+    prices: List["ProductPrice"] = Relationship(
+        back_populates="product",
+        sa_relationship_kwargs={"cascade": "all, delete-orphan"},
+    )
 
 
 class ProductPrice(SQLModel, table=True):
     product_id: str = Field(foreign_key="productinfo.product_id", primary_key=True)
     store: str = Field(primary_key=True)
     price_cents: Optional[int] = None
+    package_sizing: str
     product: ProductInfo = Relationship(back_populates="prices")
 
 
+# Replace with PostgreSQL later
 engine = create_engine("sqlite:///database.db")
 SQLModel.metadata.create_all(engine)
 
 
 def upsert_product(product_data: dict):
-    product_id = product_data["product_id"]
-
+    product_id = product_data["productId"]
     with Session(engine) as session:
-        statement = select(ProductInfo).where(ProductInfo.product_id == product_id)
-        product = session.exec(statement).one_or_none()
+        product = session.get(ProductInfo, product_id)
 
         if product:
-            if 'small_image_url' in product_data:
-                product.small_image_url = product_data['small_image_url']
-            if 'brand_name' in product_data:
-                product.brand_name = product_data['brand_name']
-            if 'title_name' in product_data:
-                product.title_name = product_data['title_name']
-            if 'type' in product_data:
-                product.type = product_data['type']
-            if 'package_sizing' in product_data:
-                product.package_sizing = product_data['package_sizing']
-            if 'prices' in product_data:
-                for new_price in product_data['prices']:
-                    store = new_price['store']
-                    price_entry = next((p for p in product.prices if p.store == store), None)
-                    if price_entry:
-                        price_entry.price_cents = new_price.get('price_cents', price_entry.price_cents)
-                    else:
-                        product.prices.append(ProductPrice(store=store, price_cents=new_price.get('price_cents')))
-            print(f"Updated product: {product_id}")
+            product.small_image_url = product_data["smallUrl"]
+            product.brand_name = product_data.get("brand")
+            product.title_name = product_data["title"]
+            product.type = product_data["type"]
+
+            price_dict = {price.store: price for price in product.prices}
+            for new_price in product_data["prices"]:
+                store = new_price["store"]
+                if store in price_dict:
+                    price_dict[store].price_cents = new_price["price_cents"]
+                    price_dict[store].package_sizing = new_price["packageSizing"]
+                else:
+                    product.prices.append(
+                        ProductPrice(
+                            store=store,
+                            price_cents=new_price["price_cents"],
+                            package_sizing=new_price["packageSizing"],
+                        )
+                    )
+            logging.info(f"Updated product: {product_id}")
+
         else:
             product = ProductInfo(
-                product_id=product_data["product_id"],
-                small_image_url=product_data["small_image_url"],
-                brand_name=product_data.get("brand_name"),
-                title_name=product_data["title_name"],
+                product_id=product_id,
+                small_image_url=product_data["smallUrl"],
+                brand_name=product_data.get("brand"),
+                title_name=product_data["title"],
                 type=product_data["type"],
-                package_sizing=product_data["package_sizing"]
+                prices=[
+                    ProductPrice(
+                        store=price["store"],
+                        price_cents=price["price_cents"],
+                        package_sizing=price["packageSizing"],
+                    )
+                    for price in product_data["prices"]
+                ],
             )
-
-            for price in product_data["prices"]:
-                product.prices.append(ProductPrice(store=price["store"], price_cents=price["price_cents"]))
-
             session.add(product)
-            print(f"Inserted new product: {product_id}")
+            logging.info(f"Inserted new product: {product_id}")
 
         session.commit()
         session.refresh(product)
 
 
+# Replace with msgspec later
 def update_products_from_json(json_file_path: str):
-    with open(json_file_path, 'r') as file:
-        products_data = json.load(file)
+    try:
+        with open(json_file_path, "r") as file:
+            products_data = json.load(file)
+        logging.info(f"Loaded JSON data from {json_file_path}")
+
+    except FileNotFoundError:
+        logging.error(f"File not found: {json_file_path}")
+        return
+
+    except json.JSONDecodeError as e:
+        logging.error(f"Error decoding JSON from {json_file_path}: {e}")
+        return
 
     for product_data in products_data:
-        upsert_product(product_data)
+        try:
+            upsert_product(product_data)
+        except Exception as e:
+            logging.error(
+                f"Failed to upsert product {product_data.get('productId', 'unknown')}: {e}"
+            )
 
 
 if __name__ == "__main__":
-    update_products_from_json("updated_products.json")
+    # Example usage
+    update_products_from_json("combined_product_data.json")
 
 
 """
-Sample Data "updated_products.json":
+Here is the format of the JSON file called "combined_product_data.json".
+This will be consumed by this script to upsert the database in a bulk operation.
 
 ```json
 [
     {
-        "product_id": "20091825001_EA",
-        "small_image_url": "https://assets.shop.loblaws.ca/products/20091825001/b1/en/front/20091825001_front_a01_@2.png",
-        "brand_name": null,
-        "title_name": "Cilantro",
+        "productId": "20091825001_EA",
+        "smallUrl": "https://assets.shop.loblaws.ca/products/20091825001/b1/en/front/20091825001_front_a01_@2.png",
+        "brand": null,
+        "title": "Cilantro",
         "type": "SOLD_BY_EACH",
-        "package_sizing": "1 bunch, $1.00/1ea",
         "prices": [
-            {"store": "zehrs", "price_cents": 100},
-            {"store": "loblaws", "price_cents": 125},
-            {"store": "nofrills", "price_cents": 75}
+            {
+                "store": "loblaws",
+                "price_cents": 100
+                "packageSizing": "1 bunch, $1.00/1ea"
+            },
+            {
+                "store": "nofrills",
+                "price_cents": 129
+                "packageSizing": "1 bunch, $1.29/1ea"
+            },
+            {
+                "store": "zehrs",
+                "price_cents": 100
+                "packageSizing": "1 bunch, $1.00/1ea"
+            }
         ]
-    },
+    }   
     {
-        "product_id": "20179038001_KG",
-        "small_image_url": "https://assets.shop.loblaws.ca/products/20179038001/b1/en/front/20179038001_front_a01_@2.png",
-        "brand_name": "Rooster",
-        "title_name": "Ginger",
-        "type": "SOLD_BY_EACH",
-        "package_sizing": "$6.61/1kg $3.00/1lb",
+        "productId": "20143381001_KG",
+        "smallUrl": "https://assets.shop.loblaws.ca/products/20143381001/b1/en/front/20143381001_front_a01_@2.png",
+        "brand": null,
+        "title": "Roma Tomatoes",
+        "type": "SOLD_BY_EACH_PRICED_BY_WEIGHT",
         "prices": [
-            {"store": "zehrs", "price_cents": 139},
-            {"store": "loblaws", "price_cents": 139},
-            {"store": "nofrills", "price_cents": 139}
+            {
+                "store": "loblaws",
+                "price_cents": 79,
+                "packageSizing": "$6.61/1kg $3.00/1lb"
+            },
+            {
+                "store": "nofrills",
+                "price_cents": 79,
+                "packageSizing": "$6.61/1kg $3.00/1lb"
+            },
+            {
+                "store": "zehrs",
+                "price_cents": 79,
+                "packageSizing": "$6.61/1kg $3.00/1lb"
+            }
         ]
     }
 ]
