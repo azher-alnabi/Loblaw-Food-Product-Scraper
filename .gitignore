@@ -1,3 +1,9 @@
+# Database files
+*.db
+
+# Document files
+*.docx
+
 # JSON output files
 *.json
 
