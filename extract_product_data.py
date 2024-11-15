@@ -2,6 +2,7 @@ import os
 import msgspec
 import logging
 
+
 """Extract product data from raw product data files and consolidate it into a single JSON file.
 
 Functions:
@@ -10,6 +11,7 @@ Functions:
 Example usage:
     extract_product_data_from_files("loblaws")
 """
+
 
 logging.basicConfig(
     level=logging.INFO,
@@ -22,7 +24,9 @@ def extract_product_data_from_files(domain):
     directory_path = os.path.join("raw_product_data", f"{domain}_raw_product_data")
 
     for file_name in os.listdir(directory_path):
-        if file_name.startswith(f"{domain}_raw_product_data_") and file_name.endswith(".json"):
+        if file_name.startswith(f"{domain}_raw_product_data_") and file_name.endswith(
+            ".json"
+        ):
             input_file_path = os.path.join(directory_path, file_name)
 
             with open(input_file_path, "rb") as file:
@@ -34,19 +38,29 @@ def extract_product_data_from_files(domain):
                     .get("productListingSection", {})
                     .get("components", [{}])[0]
                     .get("data", {})
-                    .get("productGrid", {})
-                    .get("productTiles", [])
+                    .get("productGrid")
                 )
 
-                logging.info(f"Extracted {len(product_grid)} products from {file_name}")
-                
-                product_list.extend(product_grid)
+                if product_grid is None:
+                    logging.warning(
+                        f"'productGrid' is null in {file_name}. Skipping this file."
+                    )
+                    continue
+
+                product_tiles = product_grid.get("productTiles", [])
+
+                logging.info(
+                    f"Extracted {len(product_tiles)} products from {file_name}"
+                )
+                product_list.extend(product_tiles)
 
     logging.info(f"Total products extracted: {len(product_list)}")
 
     output_folder = "consolidated_product_data"
     os.makedirs(output_folder, exist_ok=True)
-    output_file_path = os.path.join(output_folder, f"{domain}_consolidated_product_data.json")
+    output_file_path = os.path.join(
+        output_folder, f"{domain}_consolidated_product_data.json"
+    )
 
     encoded_json = msgspec.json.encode(product_list)
     formatted_json = msgspec.json.format(encoded_json, indent=4)
