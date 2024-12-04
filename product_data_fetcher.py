@@ -5,6 +5,7 @@ import os
 import time
 import random
 import logging
+from typing import Dict, Any, Tuple
 
 
 """Fetch and store paginated product data from API requests.
@@ -16,6 +17,7 @@ Functions:
       and logs successes or access restrictions. Calls `response_serialization` for each response.
     - `response_serialization`: Decodes, formats, and saves the JSON response to a domain-specific 
       output folder as a JSON file.
+    - `check_product_grid_value`: Checks if the 'productGrid' value in the JSON response is None.
 
 Example usage:
     curl_command, domain = fetch_request("loblaws")
@@ -28,7 +30,7 @@ logging.basicConfig(
 )
 
 
-def fetch_response(method, url, headers, payload, domain):
+def fetch_response(method: str, url: str, headers: Dict[str, str], payload: str, domain: str) -> None:
     output_folder = os.path.join("raw_product_data", f"{domain}_raw_product_data")
     os.makedirs(output_folder, exist_ok=True)
 
@@ -85,7 +87,7 @@ def fetch_response(method, url, headers, payload, domain):
         time.sleep(random.normalvariate(0.5, 0.05))
 
 
-def response_serialization(raw_response, pagination_number, output_folder, domain):
+def response_serialization(raw_response: str, pagination_number: int, output_folder: str, domain: str) -> None:
     response_data = msgspec.json.decode(raw_response.encode("utf-8"))
     encoded_json = msgspec.json.encode(response_data)
     formatted_json = msgspec.json.format(encoded_json, indent=4)
@@ -97,7 +99,7 @@ def response_serialization(raw_response, pagination_number, output_folder, domai
         json_file.write(formatted_json)
 
 
-def check_product_grid_value(file_path):
+def check_product_grid_value(file_path: str) -> bool:
     with open(file_path, "rb") as file:
         data = msgspec.json.decode(file.read())
 
