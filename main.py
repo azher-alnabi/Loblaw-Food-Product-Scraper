@@ -8,7 +8,7 @@ from data_pipeline import convert_and_combine, save_combined_data
 from db_operations import update_products_from_json
 
 
-def extract(domains: list) -> None:
+def sync_extract(domains: list) -> None:
     for domain in domains:
         curl_command, domain = fetch_request(domain)
         fetch_response(**curl_to_requests(curl_command, domain))
@@ -25,7 +25,7 @@ def load(input_json_cleaned_data) -> None:
 
 
 def main(domains: list, input_json_cleaned_data: str) -> None:
-    extract(domains)
+    sync_extract(domains)
     transform(domains)
     load(input_json_cleaned_data)
 
