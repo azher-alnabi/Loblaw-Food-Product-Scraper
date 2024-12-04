@@ -1,13 +1,15 @@
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright, Request
 import re
 import logging
+from typing import Tuple, Dict, Optional
 
 
 """Capture, convert, and reformat web requests into cURL and Python requests.
 
 This module captures network requests from Loblaws-affiliated websites (such as Loblaws, 
 No Frills, and Zehrs), converts them into cURL commands, and then translates these commands 
-into Python `requests` format for further processing.
+into Python `requests` format for further processing. This is used to mimic how a session
+works in a browser and to automate the process of fetching product data from these websites.
 
 Functions:
     - `fetch_request`: Navigates to a given Loblaws domain URL, captures a specific network request, 
@@ -17,7 +19,7 @@ Functions:
       headers, and payload details for direct use in Python scripts.
 
 Example usage:
-    curl_command = fetch_request("loblaws")
+    curl_command, domain = fetch_request("loblaws")
     request_details = curl_to_requests(curl_command, domain)
 """
 
@@ -27,7 +29,7 @@ logging.basicConfig(
 )
 
 
-def fetch_request(domain):
+def fetch_request(domain: str) -> Tuple[str, str]:
     url = f"https://www.{domain}.ca/food/c/27985"
 
     with sync_playwright() as p:
@@ -63,7 +65,7 @@ def fetch_request(domain):
     return curl_command, domain
 
 
-def request_to_curl(request):
+def request_to_curl(request: Request) -> str:
     curl_command = f"curl '{request.url}' --compressed -X {request.method}"
 
     for key, value in request.headers.items():
@@ -75,7 +77,7 @@ def request_to_curl(request):
     return curl_command
 
 
-def curl_to_requests(curl_command, domain):
+def curl_to_requests(curl_command: str, domain: str) -> Dict[str, Optional[str]]:
     method_match = re.search(r"-X (\w+)", curl_command)
     method = method_match.group(1) if method_match else "GET"
 
