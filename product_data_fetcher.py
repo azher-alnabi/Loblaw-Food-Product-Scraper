@@ -5,7 +5,7 @@ import os
 import time
 import random
 import logging
-from typing import Dict, Any, Tuple
+from typing import Dict
 
 
 """Fetch and store paginated product data from API requests.
