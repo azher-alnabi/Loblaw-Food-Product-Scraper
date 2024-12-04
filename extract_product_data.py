@@ -3,10 +3,10 @@ import msgspec
 import logging
 
 
-"""Extract product data from raw product data files and consolidate it into a single JSON file.
+"""Extract and consolidate product data from raw JSON files.
 
 Functions:
-    - `extract_product_data_from_files`: Extracts product data from raw product data files and consolidates it into a single JSON file.
+    - `extract_product_data_from_files`: Reads raw product data files, extracts product information, and saves it to a consolidated JSON file.
 
 Example usage:
     extract_product_data_from_files("loblaws")
@@ -19,7 +19,7 @@ logging.basicConfig(
 )
 
 
-def extract_product_data_from_files(domain):
+def extract_product_data_from_files(domain: str) -> None:
     product_list = []
     directory_path = os.path.join("raw_product_data", f"{domain}_raw_product_data")
 
