@@ -38,7 +38,7 @@ Example usage:
 
 
 def load_products_from_file(domain: str) -> List[Dict[str, Any]]:
-    input_file = f"consolidated_product_data/{domain}_consolidated_product_data.json"
+    input_file = os.path.join("consolidated_product_data", f"{domain}_consolidated_product_data.json")
     try:
         with open(input_file, "r", encoding="utf-8") as file:
             logging.info(f"Loading products from {input_file}")

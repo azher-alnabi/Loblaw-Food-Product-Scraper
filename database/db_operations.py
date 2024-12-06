@@ -5,7 +5,7 @@ from typing import Dict, Any
 from datetime import datetime, timezone
 
 from sqlmodel import Session
-from schema import ProductInfo, ProductPrice, engine
+from database.schema import ProductInfo, ProductPrice, engine
 
 
 """Database operations for upserting product data into the database.

@@ -6,12 +6,12 @@ import glob
 import shutil
 import logging
 
-from product_data_fetcher import fetch_response
-from web_request_converter import curl_to_requests, fetch_request
-from extract_product_data import extract_product_data_from_files
+from modules.product_data_fetcher import fetch_response
+from modules.web_request_converter import curl_to_requests, fetch_request
+from modules.extract_product_data import extract_product_data_from_files
+from modules.data_pipeline import convert_and_combine, save_combined_data
 
-from data_pipeline import convert_and_combine, save_combined_data
-from db_operations import update_products_from_json
+from database.db_operations import update_products_from_json
 
 
 logging.basicConfig(
@@ -94,7 +94,7 @@ if __name__ == "__main__":
     # os.makedirs("logs", exist_ok=True)
     # I will need to create a logs folder in the root directory at a later time
 
-    json_file = "supported_domains.json"
+    json_file = os.path.join("config", "supported_domains.json")
 
     try:
         with open(json_file, "r") as file:
