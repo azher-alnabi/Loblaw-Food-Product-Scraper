@@ -7,6 +7,9 @@
 # JSON output files
 *.json
 
+# Exception for supported_domains.json
+!supported_domains.json
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
