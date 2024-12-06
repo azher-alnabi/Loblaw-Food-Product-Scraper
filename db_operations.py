@@ -1,5 +1,9 @@
 import json
 import logging
+
+from typing import Dict, Any
+from datetime import datetime, timezone
+
 from sqlmodel import Session
 from schema import ProductInfo, ProductPrice, engine
 
@@ -25,8 +29,10 @@ logging.basicConfig(
 )
 
 
-def upsert_product(product_data: dict):
+def upsert_product(product_data: Dict[str, Any]) -> None:
     product_id = product_data["productId"]
+    current_time = datetime.now(timezone.utc)
+
     with Session(engine) as session:
         try:
             product = session.get(ProductInfo, product_id)
@@ -38,20 +44,26 @@ def upsert_product(product_data: dict):
                 product.type = product_data["type"]
 
                 price_dict = {price.store: price for price in product.prices}
+
                 for new_price in product_data["prices"]:
                     store = new_price["store"]
                     if store in price_dict:
-                        price_dict[store].price_cents = new_price["price_cents"]
-                        price_dict[store].package_sizing = new_price["packageSizing"]
+                        price = price_dict[store]
+                        price.price_cents = new_price["price_cents"]
+                        price.package_sizing = new_price["packageSizing"]
+                        price.updated_at = current_time
                     else:
                         product.prices.append(
                             ProductPrice(
+                                product_id=product_id,
                                 store=store,
                                 price_cents=new_price["price_cents"],
                                 package_sizing=new_price["packageSizing"],
                             )
                         )
-                logging.info(f"Updated product: {product_id}")
+                logging.info(
+                    f"Updated product: {product_id} at {current_time.isoformat()}"
+                )
 
             else:
                 product = ProductInfo(
@@ -62,6 +74,7 @@ def upsert_product(product_data: dict):
                     type=product_data["type"],
                     prices=[
                         ProductPrice(
+                            product_id=product_id,
                             store=price["store"],
                             price_cents=price["price_cents"],
                             package_sizing=price["packageSizing"],
@@ -70,18 +83,22 @@ def upsert_product(product_data: dict):
                     ],
                 )
                 session.add(product)
-                logging.info(f"Inserted new product: {product_id}")
+                logging.info(
+                    f"Inserted new product: {product_id} at {current_time.isoformat()}"
+                )
 
             session.commit()
             session.refresh(product)
 
         except Exception as e:
-            logging.error(f"Error processing product {product_id}: {e}")
+            logging.error(
+                f"Error processing product {product_id} at {current_time.isoformat()}: {e}"
+            )
             session.rollback()
 
 
 # Replace with msgspec later
-def update_products_from_json(json_file_path: str):
+def update_products_from_json(json_file_path: str) -> None:
     try:
         with open(json_file_path, "r") as file:
             products_data = json.load(file)
@@ -100,7 +117,7 @@ def update_products_from_json(json_file_path: str):
             upsert_product(product_data)
         except Exception as e:
             logging.error(
-                f"Failed to upsert product {product_data.get('productId', 'unknown')}: {e}"
+                f"Failed to upsert product {product_data.get('productId', 'unknown')} at {datetime.now(timezone.utc).isoformat()}: {e}"
             )
 
 
