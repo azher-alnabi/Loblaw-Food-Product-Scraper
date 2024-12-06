@@ -1,7 +1,12 @@
 import json
 import os
 import logging
+
+from typing import List, Dict, Any
+from datetime import datetime, timezone
+
 from collections import defaultdict
+from datetime import datetime
 
 
 logging.basicConfig(
@@ -32,7 +37,7 @@ Example usage:
 """
 
 
-def load_products_from_file(domain):
+def load_products_from_file(domain: str) -> List[Dict[str, Any]]:
     input_file = f"consolidated_product_data/{domain}_consolidated_product_data.json"
     try:
         with open(input_file, "r", encoding="utf-8") as file:
@@ -45,7 +50,7 @@ def load_products_from_file(domain):
     return []
 
 
-def extract_product_info(product):
+def extract_product_info(product: Dict[str, Any]) -> Dict[str, Any]:
     product_id = product.get("productId")
 
     small_url = None
@@ -72,7 +77,14 @@ def extract_product_info(product):
     }
 
 
-def add_price_if_unique(combined_data, product_id, domain, price_cents, package_sizing):
+def add_price_if_unique(
+    combined_data: Dict[str, Any],
+    product_id: str,
+    domain: str,
+    price_cents: int,
+    package_sizing: str,
+) -> None:
+
     existing_prices = combined_data[product_id]["prices"]
     if not any(
         price["store"] == domain and price["price_cents"] == price_cents
@@ -92,7 +104,7 @@ def add_price_if_unique(combined_data, product_id, domain, price_cents, package_
         )
 
 
-def convert_and_combine(domains):
+def convert_and_combine(domains: List[str]) -> List[Dict[str, Any]]:
     combined_data = defaultdict(
         lambda: {
             "productId": None,
@@ -137,13 +149,25 @@ def convert_and_combine(domains):
 
 
 # Replace with msgspec later
-def save_combined_data(combined_data, output_file="combined_product_data.json"):
-    if os.path.dirname(output_file):
-        os.makedirs(os.path.dirname(output_file), exist_ok=True)
+def save_combined_data(
+    combined_data: List[Dict[str, Any]],
+    output_dir: str = "combined_product_data",
+    base_filename: str = "combined_product_data.json",
+) -> None:
 
-    with open(output_file, "w", encoding="utf-8") as file:
-        json.dump(combined_data, file, indent=4)
-    logging.info(f"Combined data saved to {output_file}")
+    timestamp = datetime.now(timezone.utc).strftime("%Y_%m_%d_%H_%M")
+    output_file = os.path.join(
+        output_dir, f"{os.path.splitext(base_filename)[0]}_{timestamp}.json"
+    )
+
+    os.makedirs(os.path.dirname(output_file), exist_ok=True)
+
+    try:
+        with open(output_file, "w", encoding="utf-8") as file:
+            json.dump(combined_data, file, indent=4)
+        logging.info(f"Combined data saved to {output_file}")
+    except IOError as e:
+        logging.error(f"Failed to save combined data to {output_file}: {e}")
 
 
 if __name__ == "__main__":
