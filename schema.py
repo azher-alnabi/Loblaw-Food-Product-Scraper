@@ -1,6 +1,8 @@
 from typing import Optional, List
 from sqlmodel import Field, SQLModel, create_engine, Relationship
 
+from datetime import datetime, timezone
+
 
 """This is the schema for the database that will store the product information.
 
@@ -29,11 +31,14 @@ class ProductInfo(SQLModel, table=True):
     )
 
 
+## I need to look into temporal tables and how to implement them in SQLModel
+## Temporal tables store historical data, which is useful in this case for tracking price changes
 class ProductPrice(SQLModel, table=True):
     product_id: str = Field(foreign_key="productinfo.product_id", primary_key=True)
     store: str = Field(primary_key=True)
     price_cents: Optional[int] = None
     package_sizing: str
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     product: ProductInfo = Relationship(back_populates="prices")
 
 
