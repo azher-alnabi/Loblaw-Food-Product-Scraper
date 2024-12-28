@@ -2,7 +2,8 @@
 
 ## Description:
 
-This is tool that allows you to scrape all the food products from the Loblaw Companies Limited websites for future data processing and analysis.
+This tool allows you to scrape all the food products from the Loblaw Companies Limited websites for future data processing and analysis.
+
 This includes a significant amount of websites that are owned by Loblaw Companies Limited, such as Loblaws, No Frills, Zehrs, and more. 
 
 The tool will scrape the following product information:
@@ -98,20 +99,20 @@ python main.py -h
 ```
 
 
-## Domains Supported:
+## Grocery stores / Domains Supported:
 - https://www.loblaws.ca/food/c/27985
 - https://www.zehrs.ca/food/c/27985
-- https://www.yourindependentgrocer.ca/food/c/27985
-- https://www.valumart.ca/food/c/27985
-- https://www.atlanticsuperstore.ca/food/c/27985
-- https://www.newfoundlandgrocerystores.ca/food/c/27985
 - https://www.fortinos.ca/food/c/27985
 - https://www.wholesaleclub.ca/food/c/27985
 - https://www.realcanadiansuperstore.ca/food/c/27985
 - https://www.nofrills.ca/food/c/27985
 
 
-## Future Domains to Support:
+## Grocery stores / Future Domains to Support:
 - https://www.independentcitymarket.ca/food/c/27985
+- https://www.yourindependentgrocer.ca/food/c/27985
+- https://www.valumart.ca/food/c/27985
+- https://www.atlanticsuperstore.ca/food/c/27985
+- https://www.newfoundlandgrocerystores.ca/food/c/27985
 - https://www.provigo.ca/alimentation/c/27985 [French]
 - https://www.maxi.ca/alimentation/c/27985 [French]
