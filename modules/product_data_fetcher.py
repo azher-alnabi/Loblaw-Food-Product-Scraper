@@ -114,7 +114,7 @@ def check_product_grid_value(file_path: str) -> bool:
 
 if __name__ == "__main__":
     # Import functions from web_request_converter.py
-    from modules.web_request_converter import curl_to_requests, fetch_request
+    from web_request_converter import curl_to_requests, fetch_request
 
     # Example usage
     curl_command, domain = fetch_request("loblaws")
