@@ -12,6 +12,7 @@ from modules.extract_product_data import extract_product_data_from_files
 from modules.data_pipeline import convert_and_combine, save_combined_data
 
 from database.db_operations import update_products_from_json
+from scripts.extract_data import extract_data_to_json
 
 
 logging.basicConfig(
@@ -55,9 +56,17 @@ def parse_arguments(supported_domains: list[str]) -> list:
     parser.add_argument(
         "-all", action="store_true", help="Harvest all supported domains"
     )
+    parser.add_argument(
+        "-extract", nargs=1, metavar="FILENAME", help="Extract data from the database to JSON"
+    )
     parser.add_argument("domains", nargs="*", help="Specify domains to harvest")
 
     args = parser.parse_args()
+
+    if args.extract:
+        output_file = f"{args.extract[0]}.json"
+        extract_data_to_json(output_file)
+        sys.exit(0)
 
     if args.all:
         return supported_domains
