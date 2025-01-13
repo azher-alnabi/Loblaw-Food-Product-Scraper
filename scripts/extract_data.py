@@ -12,7 +12,7 @@ Functions:
     - `extract_data_to_json`: Extracts product data from the database and writes it to a JSON file.
 
 Example usage:
-    update_products_from_json("foods.json")
+    extract_data_to_json("foods.json")
 """
 
 
