@@ -109,7 +109,7 @@ def check_product_grid_value(file_path: str) -> bool:
 
         except KeyError:
             logging.warning(f"Key 'productGrid' not found in {file_path}")
-            return False
+            return True
 
 
 if __name__ == "__main__":
