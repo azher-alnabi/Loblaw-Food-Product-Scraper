@@ -79,6 +79,8 @@ pip3 install -r requirements.txt
 
 ## Usage
 
+### Harvest Data
+
 To harvest the data from all the supported domains, run the following command:
 
 ```bash
@@ -97,6 +99,17 @@ To see all the available options, run the following command:
 ```bash
 python main.py -h
 ```
+
+### Retrieve Data
+
+To pull data out of the SQLite database, you can use the following command:
+
+```bash
+python main.py -extract foods
+```
+
+You can replace "foods" with any other name you want to use for the output file.
+This will create a JSON file with the data from the SQLite database.
 
 
 ## Grocery stores / Domains Supported:
