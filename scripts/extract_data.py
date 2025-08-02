@@ -23,6 +23,8 @@ logging.basicConfig(
 
 
 def extract_data_to_json(output_file: str) -> None:
+    logging.info(f"Beginning to extract data from database into {output_file}")
+    
     with Session(engine) as session:
         statement = select(ProductInfo)
         products = session.exec(statement).all()
